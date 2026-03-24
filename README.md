@@ -25,7 +25,9 @@ Playwright + pytest test suite for [saucedemo.com](https://www.saucedemo.com) co
 ├── conftest.py             # Shared pytest fixtures
 ├── pytest.ini              # Pytest configuration
 ├── .env.example            # Environment variable template
-├── .gitlab-ci.yml          # GitLab CI/CD pipeline
+├── .github/
+│   └── workflows/
+│       └── tests.yml       # GitHub Actions CI/CD pipeline
 └── requirements.txt
 ```
 
@@ -67,12 +69,11 @@ HEADLESS=false pytest tests/e2e
 
 ## CI/CD
 
-The `.gitlab-ci.yml` defines 4 stages:
-1. `install` — validates dependency installation
-2. `unit` — runs unit tests
-3. `integration` — runs integration tests
-4. `e2e` — runs end-to-end tests
-5. `report` — publishes HTML reports to GitLab Pages (on `main`/`develop`)
+The `.github/workflows/tests.yml` defines 4 jobs:
+1. `unit_tests` — runs unit tests
+2. `integration_tests` — runs integration tests (needs unit to pass)
+3. `e2e_tests` — runs e2e tests (needs integration to pass)
+4. `publish_report` — deploys HTML reports to GitHub Pages (on `main`/`develop`)
 
 ## Test Count Summary
 
