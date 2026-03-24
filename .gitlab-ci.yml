@@ -1,0 +1,83 @@
+stages:
+  - install
+  - unit
+  - integration
+  - e2e
+  - report
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  HEADLESS: "true"
+  BROWSER: "chromium"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+.base_job:
+  image: mcr.microsoft.com/playwright/python:v1.44.0-jammy
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - playwright install chromium
+
+install_deps:
+  extends: .base_job
+  stage: install
+  script:
+    - echo "Dependencies installed successfully"
+
+unit_tests:
+  extends: .base_job
+  stage: unit
+  script:
+    - source .venv/bin/activate
+    - pytest tests/unit -m unit -v --html=reports/unit_report.html --self-contained-html
+  artifacts:
+    when: always
+    paths:
+      - reports/unit_report.html
+    expire_in: 7 days
+
+integration_tests:
+  extends: .base_job
+  stage: integration
+  script:
+    - source .venv/bin/activate
+    - pytest tests/integration -m integration -v --html=reports/integration_report.html --self-contained-html
+  artifacts:
+    when: always
+    paths:
+      - reports/integration_report.html
+    expire_in: 7 days
+
+e2e_tests:
+  extends: .base_job
+  stage: e2e
+  script:
+    - source .venv/bin/activate
+    - pytest tests/e2e -m e2e -v --html=reports/e2e_report.html --self-contained-html
+  artifacts:
+    when: always
+    paths:
+      - reports/e2e_report.html
+    expire_in: 7 days
+
+pages:
+  stage: report
+  dependencies:
+    - unit_tests
+    - integration_tests
+    - e2e_tests
+  script:
+    - mkdir -p public
+    - cp reports/*.html public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - main
+    - develop
