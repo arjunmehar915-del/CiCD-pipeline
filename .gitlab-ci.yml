@@ -1,5 +1,4 @@
 stages:
-  - install
   - unit
   - integration
   - e2e
@@ -11,23 +10,20 @@ variables:
   BROWSER: "chromium"
 
 cache:
+  key:
+    files:
+      - requirements.txt
   paths:
     - .cache/pip
     - .venv/
 
 .base_job:
-  image: mcr.microsoft.com/playwright/python:v1.44.0-jammy
+  image: mcr.microsoft.com/playwright/python:v1.58.0-jammy
   before_script:
     - python -m venv .venv
     - source .venv/bin/activate
     - pip install -r requirements.txt
     - playwright install chromium
-
-install_deps:
-  extends: .base_job
-  stage: install
-  script:
-    - echo "Dependencies installed successfully"
 
 unit_tests:
   extends: .base_job
@@ -67,6 +63,8 @@ e2e_tests:
 
 pages:
   stage: report
+  image: alpine:latest
+  before_script: []
   dependencies:
     - unit_tests
     - integration_tests
