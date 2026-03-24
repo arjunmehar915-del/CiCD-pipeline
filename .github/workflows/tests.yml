@@ -110,60 +110,34 @@ jobs:
           path: reports/e2e_report.html
           retention-days: 7
 
-  # ── Stage 4: Publish Reports to GitHub Pages ────────────────────────────────
+  # ── Stage 4: Bundle all reports into one downloadable artifact ──────────────
   publish_report:
     name: Publish Reports
     runs-on: ubuntu-latest
     needs: [unit_tests, integration_tests, e2e_tests]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    permissions:
-      pages: write
-      id-token: write
-      contents: read
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    if: always()
     steps:
       - name: Download unit report
         uses: actions/download-artifact@v4
         with:
           name: unit-report
-          path: public/
+          path: all-reports/
 
       - name: Download integration report
         uses: actions/download-artifact@v4
         with:
           name: integration-report
-          path: public/
+          path: all-reports/
 
       - name: Download e2e report
         uses: actions/download-artifact@v4
         with:
           name: e2e-report
-          path: public/
+          path: all-reports/
 
-      - name: Create index page
-        run: |
-          cat <<EOF > public/index.html
-          <!DOCTYPE html>
-          <html>
-          <head><title>SauceDemo Test Reports</title></head>
-          <body>
-            <h1>SauceDemo Test Reports</h1>
-            <ul>
-              <li><a href="unit_report.html">Unit Tests</a></li>
-              <li><a href="integration_report.html">Integration Tests</a></li>
-              <li><a href="e2e_report.html">E2E Tests</a></li>
-            </ul>
-          </body>
-          </html>
-          EOF
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
         with:
-          path: public/
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: all-reports
+          path: all-reports/
+          retention-days: 14
